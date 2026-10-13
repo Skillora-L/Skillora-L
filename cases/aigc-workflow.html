@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AIGC 设计工作流开发 | Skillora-L</title>
+    <style>
+      :root {
+        --bg:#050505; --panel:#10110f; --ink:#f7f7f1; --muted:rgba(247,247,241,.66);
+        --line:rgba(255,255,255,.14); --acid:#baff19; --ease:cubic-bezier(.16,1,.3,1);
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+        color:var(--ink); background:var(--bg);
+      }
+      * { box-sizing:border-box; }
+      html { scroll-behavior:smooth; }
+      body {
+        margin:0;
+        background:
+          radial-gradient(circle at 82% 6%, rgba(186,255,25,.14), transparent 34vw),
+          radial-gradient(circle at 0 32%, rgba(90,130,60,.13), transparent 32vw),
+          #050505;
+      }
+      a { color:inherit; text-decoration:none; }
+      .case-page { width:min(1520px, calc(100vw - 96px)); margin:0 auto; padding:44px 0 120px; }
+      nav { position:sticky; top:18px; z-index:10; display:flex; justify-content:space-between; align-items:center; margin-bottom:86px; padding:10px; border:1px solid var(--line); border-radius:999px; background:rgba(12,12,10,.58); backdrop-filter:blur(18px); }
+      .logo-pill, .nav-cta { min-height:42px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; font-weight:900; }
+      .logo-pill { padding:0 22px; background:var(--ink); color:#050505; }
+      .nav-cta { padding:0 20px; border:1px solid var(--line); color:rgba(255,255,255,.84); }
+      .eyebrow { color:var(--acid); font-size:12px; font-weight:900; letter-spacing:.14em; text-transform:uppercase; }
+      h1 { max-width:1100px; margin:18px 0 0; color:var(--acid); font-size:clamp(62px,8vw,136px); line-height:.9; letter-spacing:0; }
+      .lead { max-width:980px; margin:34px 0 0; color:var(--muted); font-size:22px; line-height:1.75; }
+      .metrics { display:flex; flex-wrap:wrap; gap:12px; margin-top:34px; }
+      .metric { padding:14px 18px; border:1px solid var(--line); border-radius:999px; background:rgba(255,255,255,.055); color:rgba(255,255,255,.78); font-weight:800; }
+      .metric strong { color:var(--acid); margin-right:8px; font-size:20px; }
+
+      .intro-card {
+        position:relative;
+        margin-top:58px;
+        display:grid;
+        grid-template-columns:.92fr 1.08fr;
+        gap:0;
+        min-height:600px;
+        overflow:hidden;
+        border:1px solid var(--line);
+        border-radius:34px;
+        background:
+          rgba(12,13,12,.82);
+        box-shadow:0 32px 100px rgba(0,0,0,.34);
+        backdrop-filter:blur(18px);
+      }
+      .intro-card::before {
+        content:"";
+        position:absolute;
+        inset:0;
+        background:rgba(255,255,255,.028);
+        pointer-events:none;
+        z-index:1;
+      }
+      .intro-card::after {
+        content:"";
+        position:absolute;
+        inset:1px;
+        border-radius:33px;
+        pointer-events:none;
+        z-index:3;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.022)),
+          repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 4px);
+        mix-blend-mode:screen;
+        opacity:.3;
+      }
+      .intro-visual { position:relative; margin:0; min-height:600px; overflow:hidden; }
+      .intro-visual::before {
+        content:"";
+        position:absolute;
+        inset:18px;
+        z-index:2;
+        border:1px solid rgba(255,255,255,.2);
+        border-radius:24px;
+        background:rgba(255,255,255,.055);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 24px 80px rgba(0,0,0,.26);
+        pointer-events:none;
+      }
+      .intro-visual::after {
+        content:"WORKFLOW LIBRARY";
+        position:absolute;
+        left:28px;
+        bottom:26px;
+        z-index:2;
+        color:rgba(255,255,255,.58);
+        font-size:12px;
+        font-weight:900;
+        letter-spacing:.16em;
+      }
+      .intro-visual img {
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        display:block;
+        filter:brightness(.88) saturate(.9) contrast(1.03);
+        transform:scale(1.01);
+        transition:transform 1.2s var(--ease), filter 1.2s var(--ease);
+      }
+      .intro-card:hover .intro-visual img { transform:scale(1.035); filter:brightness(.92) saturate(.94) contrast(1.03); }
+      .intro-copy {
+        position:relative;
+        z-index:2;
+        padding:54px;
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        margin:18px 18px 18px 0;
+        border:1px solid rgba(255,255,255,.12);
+        border-radius:26px;
+        background:rgba(11,12,11,.82);
+        backdrop-filter:blur(12px);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+      }
+      .intro-copy h2 { margin:0; font-size:50px; line-height:1.04; }
+      .intro-copy p { color:var(--muted); line-height:1.95; font-size:18px; }
+      .intro-copy .pill-row { border-top:1px solid var(--line); padding-top:24px; }
+      .pill-row { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
+      .pill { padding:9px 13px; border-radius:999px; background:rgba(255,255,255,.09); color:rgba(255,255,255,.78); font-size:13px; font-weight:800; }
+      .section-head { margin-top:96px; display:flex; justify-content:space-between; gap:24px; align-items:end; border-bottom:1px solid var(--line); padding-bottom:18px; }
+      .section-head h2 { margin:0; color:var(--acid); font-size:clamp(40px,5vw,84px); line-height:.92; }
+      .section-head p { max-width:520px; margin:0; color:var(--muted); line-height:1.8; }
+      .workflow-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:24px; margin-top:28px; }
+      .workflow-card { display:grid; grid-template-rows:auto 1fr; border:1px solid var(--line); border-radius:30px; background:linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.025)); box-shadow:0 28px 90px rgba(0,0,0,.25); overflow:hidden; }
+      .workflow-card:nth-child(3n + 1) { grid-column:span 2; grid-template-columns:1.12fr .88fr; grid-template-rows:auto; }
+      .workflow-card figure { margin:0; overflow:hidden; background:#141414; min-height:360px; }
+      .workflow-card img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 1s var(--ease), filter 1s var(--ease); filter:brightness(.9) saturate(.9); }
+      .workflow-card:hover img { transform:scale(1.035); filter:brightness(.98) saturate(1.08) contrast(1.03); }
+      .workflow-copy { padding:30px; display:flex; flex-direction:column; justify-content:space-between; gap:28px; }
+      .workflow-copy small { color:var(--acid); font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
+      .workflow-copy h3 { margin:14px 0 0; font-size:34px; line-height:1.08; }
+      .workflow-copy p { margin:16px 0 0; color:var(--muted); line-height:1.85; font-size:17px; }
+      @media (max-width:900px){
+        .case-page{width:calc(100vw - 32px);}
+        .intro-card,.workflow-grid,.workflow-card:nth-child(3n + 1){grid-template-columns:1fr; grid-column:auto;}
+        .intro-card::before{background:rgba(255,255,255,.026);}
+        .intro-copy{padding:30px; margin:0 18px 18px;}
+        .section-head{display:block;}
+        h1{font-size:56px;}
+      }
+    </style>
+  </head>
+  <body>
+    <main class="case-page">
+      <nav><a class="logo-pill" href="/">Skillora-L</a><a class="nav-cta" href="/#projects">返回项目</a></nav>
+      <p class="eyebrow">ComfyUI / libtv / LoRA / Automation System</p>
+      <h1>AIGC 设计工作流开发</h1>
+      <p class="lead">将零散 AI 能力封装为团队可复用、可培训、可管理的企业级设计生产系统，让电商视觉从单点出图升级为标准化工作流资产。</p>
+      <div class="metrics">
+        <span class="metric"><strong>20+</strong>自动化工作流节点</span>
+        <span class="metric"><strong>ComfyUI</strong>企业级流程搭建</span>
+        <span class="metric"><strong>libtv</strong>跨境套图模板</span>
+        <span class="metric"><strong>LoRA</strong>品牌与产品定制模型</span>
+      </div>
+
+      <section class="intro-card">
+        <figure class="intro-visual"><img src="/assets/aigc-workflows/workflow-01.jpg" alt="AIGC 设计工作流开发项目总览" decoding="async" /></figure>
+        <article class="intro-copy">
+          <div>
+            <p class="eyebrow">Project Overview</p>
+            <h2>从工具尝试到生产系统</h2>
+            <p>长期负责公司 ComfyUI 整套 AI 绘图工作流的搭建、更新与迭代维护，持续扩充、优化全品类标准化工作流文件库，形成完整成套的工具资源。结合设计、电商素材产出的真实业务需求，持续调整节点逻辑、优化运行稳定性，同步适配各类大模型调用，不断完善工作流体系。</p>
+          </div>
+          <div class="pill-row">
+            <span class="pill">场景生成</span><span class="pill">产品精修</span><span class="pill">局部修改</span><span class="pill">批量套图</span><span class="pill">团队可用</span>
+          </div>
+        </article>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Workflow Library</h2>
+          <p>每个工作流都对应真实的电商生产任务，用“图片 + 功能说明”的方式展示能力边界与落地价值。</p>
+        </div>
+        <div class="workflow-grid">
+          <article class="workflow-card">
+            <figure><img src="/assets/aigc-workflows/workflow-07.jpg" alt="Flux2-Klein 无限扩图颜色矫正" loading="lazy" decoding="async" /></figure>
+            <div class="workflow-copy"><div><small>Flux2-Klein</small><h3>无限扩图 + 颜色矫正</h3><p>支持图片四边自由延展扩图，智能匹配原图纹理与光影自然延伸画面；内置色彩矫正节点，可校正偏色并微调明暗饱和度。</p></div><div class="pill-row"><span class="pill">自由扩图</span><span class="pill">纹理延展</span><span class="pill">颜色校正</span></div></div>
+          </article>
+          <article class="workflow-card">
+            <figure><img src="/assets/aigc-workflows/workflow-03.jpg" alt="Flux2Klein 万物迁移" loading="lazy" decoding="async" /></figure>
+            <div class="workflow-copy"><div><small>Flux2Klein</small><h3>万物迁移</h3><p>通过遮罩对两张图片进行交互编辑，将主体、局部元素或特定风格迁移到另一张图中；结合 LoRA 精准控制迁移区域、融合位置与边缘过渡。</p></div><div class="pill-row"><span class="pill">遮罩控制</span><span class="pill">LoRA</span><span class="pill">风格融合</span></div></div>
+          </article>
+          <article class="workflow-card">
+            <figure><img src="/assets/aigc-workflows/workflow-05.jpg" alt="Flux2-Klein 轻度精修重新打光" loading="lazy" decoding="async" /></figure>
+            <div class="workflow-copy"><div><small>Flux2-Klein</small><h3>轻度精修 + 重新打光</h3><p>对人物或产品进行轻度精修，柔化瑕疵、调整明暗层次与整体质感，并根据画面主体重建更自然的光源关系。</p></div><div class="pill-row"><span class="pill">产品精修</span><span class="pill">重新打光</span><span class="pill">质感优化</span></div></div>
+          </article>
+          <article class="workflow-card">
+            <figure><img src="/assets/aigc-workflows/workflow-04.jpg" alt="Flux2-Klein 一键洗图去除 AI 感" loading="lazy" decoding="async" /></figure>
+            <div class="workflow-copy"><div><small>Flux2-Klein</small><h3>一键洗图 + 去除 AI 感</h3><p>一键全局优化画面，自动校正光影、重塑细节纹理；可搭配自定义提示词精准洗图，改善多次 AI 生成带来的失真、违和质感，弱化 AI 痕迹。</p></div><div class="pill-row"><span class="pill">真实质感</span><span class="pill">光影校正</span><span class="pill">细节重塑</span></div></div>
+          </article>
+          <article class="workflow-card">
+            <figure><img src="/assets/aigc-workflows/workflow-06.jpg" alt="Flux2-Klein 单图编辑" loading="lazy" decoding="async" /></figure>
+            <div class="workflow-copy"><div><small>Flux2-Klein</small><h3>单图编辑</h3><p>支持单张图像一站式修改，包括局部重绘、背景换景、产品精修、色彩调校等基础编辑能力，适合快速处理多类型修图需求。</p></div><div class="pill-row"><span class="pill">局部重绘</span><span class="pill">换背景</span><span class="pill">色彩调校</span></div></div>
+          </article>
+          <article class="workflow-card">
+            <figure><img src="/assets/aigc-workflows/workflow-02.jpg" alt="Flux2-Klein 双图编辑" loading="lazy" decoding="async" /></figure>
+            <div class="workflow-copy"><div><small>Flux2-Klein</small><h3>双图编辑</h3><p>支持两张图片联动互改，可互相提取主体、融合背景、参照参考图调整构图与色彩，一键将 A 图元素迁移至 B 图，并双向匹配光影色调。</p></div><div class="pill-row"><span class="pill">双图互改</span><span class="pill">主体迁移</span><span class="pill">光影匹配</span></div></div>
+          </article>
+          <article class="workflow-card">
+            <figure><img src="/assets/aigc-workflows/workflow-08.jpg" alt="libtv 跨境套图生成模板" loading="lazy" decoding="async" /></figure>
+            <div class="workflow-copy"><div><small>libtv</small><h3>跨境套图生成模板</h3><p>一键智能抠图，自动识别产品核心卖点，批量输出白底卖点图、局部实景细节图、使用场景效果图，并自动完成白底首页与场景首页排版。</p></div><div class="pill-row"><span class="pill">智能抠图</span><span class="pill">卖点拆解</span><span class="pill">批量套图</span></div></div>
+          </article>
+          <article class="workflow-card">
+            <figure><img src="/assets/aigc-workflows/workflow-11.jpg" alt="Qwen-image 局部消除" loading="lazy" decoding="async" /></figure>
+            <div class="workflow-copy"><div><small>Qwen-image</small><h3>局部消除</h3><p>通过蒙版圈选需清除区域，一键移除路人、水印、杂物、瑕疵等多余元素，自动复刻周边纹理光影并无缝填充，保留原图主体与色彩结构。</p></div><div class="pill-row"><span class="pill">蒙版清除</span><span class="pill">纹理修复</span><span class="pill">主体保留</span></div></div>
+          </article>
+          <article class="workflow-card">
+            <figure><img src="/assets/aigc-workflows/workflow-10.jpg" alt="Qwen-image 修改人物面部表情" loading="lazy" decoding="async" /></figure>
+            <div class="workflow-copy"><div><small>Qwen-image</small><h3>人物表情调整</h3><p>精准调整人物面部表情，实现多种自然表情变化；五官特征与原本人像保持稳定，肤色、光影、发型和整体画面质感同步协调。</p></div><div class="pill-row"><span class="pill">表情变化</span><span class="pill">人像稳定</span><span class="pill">自然过渡</span></div></div>
+          </article>
+          <article class="workflow-card">
+            <figure><img src="/assets/aigc-workflows/workflow-09.jpg" alt="Qwen-image 产品九视图展示" loading="lazy" decoding="async" /></figure>
+            <div class="workflow-copy"><div><small>Qwen-image</small><h3>产品 9 视图展示</h3><p>一键生成商品九宫多角度效果图，自动规整产品 9 个展示视角，每个视角可按需求单独调整，并配合 LoRA 统一光影、底色与产品质感。</p></div><div class="pill-row"><span class="pill">九视图</span><span class="pill">多角度</span><span class="pill">质感统一</span></div></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
